@@ -781,10 +781,10 @@
                     </div>
 
                     <div class="status-buttons">
-                        <button class="status-btn yes ${currentRecord === true ? 'active' : ''}" onclick="handleStatus(true)">
+                        <button id="btn-yes" class="status-btn yes" onclick="handleStatus(true)">
                             ✅ 拉了
                         </button>
-                        <button class="status-btn no ${currentRecord === false ? 'active' : ''}" onclick="handleStatus(false)">
+                        <button id="btn-no" class="status-btn no" onclick="handleStatus(false)">
                             ❌ 没拉
                         </button>
                     </div>
@@ -834,6 +834,19 @@
                 selectedDate = e.target.value;
                 renderContent();
             });
+            
+            // 设置按钮状态
+            const btnYes = document.getElementById('btn-yes');
+            const btnNo = document.getElementById('btn-no');
+            if (btnYes && btnNo) {
+                btnYes.classList.remove('active');
+                btnNo.classList.remove('active');
+                if (currentRecord === true) {
+                    btnYes.classList.add('active');
+                } else if (currentRecord === false) {
+                    btnNo.classList.add('active');
+                }
+            }
         }
 
         // 处理状态按钮点击
