@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💩 情侣排便统计</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            width: 100%;
+        }
+
+        .user-selector {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-selector h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .user-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .user-btn {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            border: 3px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .user-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .user-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .record-section,
+        .stats-section,
+        .recent-records {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .record-section h2,
+        .stats-section h2,
+        .recent-records h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .date-picker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .date-picker label {
+            font-size: 1.1rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .date-picker input {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .date-picker input:focus {
+            border-color: #667eea;
+        }
+
+        .status-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .status-btn {
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            border: 3px solid #ddd;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .status-btn.yes {
+            border-color: #4caf50;
+            color: #4caf50;
+        }
+
+        .status-btn.yes:hover,
+        .status-btn.yes.active {
+            background: #4caf50;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .status-btn.no {
+            border-color: #ff9800;
+            color: #ff9800;
+        }
+
+        .status-btn.no:hover,
+        .status-btn.no.active {
+            background: #ff9800;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .current-status {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .status-text {
+            font-size: 1.2rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .status-text.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-text.warning {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .status-text.info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-card.success {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .stat-card.warning {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        }
+
+        .stat-card.info {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .records-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .record-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .record-item:hover {
+            background: #e9ecef;
+        }
+
+        .record-date {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .record-status {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .record-status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .record-status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .no-records {
+            text-align: center;
+            color: #999;
+            font-size: 1.1rem;
+            padding: 2rem;
+        }
+
+        .welcome-message {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .welcome-message p {
+            font-size: 1.5rem;
+            color: #666;
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .footer p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .user-buttons {
+                flex-direction: column;
+            }
+
+            .user-btn {
+                width: 100%;
+            }
+
+            .status-buttons {
+                flex-direction: column;
+            }
+
+            .status-btn {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>💩 情侣排便统计 💩</h1>
+            <p class="subtitle">记录每一天的健康习惯</p>
+        </header>
+
+        <div class="container">
+            <div class="user-selector">
+                <h2>选择用户</h2>
+                <div class="user-buttons">
+                    <button class="user-btn" data-user="蒋老大">👨 蒋老大</button>
+                    <button class="user-btn" data-user="小邓邓">👩 小邓邓</button>
+                </div>
+            </div>
+
+            <div id="content-area">
+                <div class="welcome-message">
+                    <p>👆 请选择用户开始记录</p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>💕 祝你们身体健康，天天通畅 💕</p>
+        </footer>
+    </div>
+
+    <script>
+        let currentUser = '';
+        let selectedDate = new Date().toISOString().split('T')[0];
+        let records = {};
+
+        // 从 localStorage 加载数据
+        function loadRecords() {
+            const savedRecords = localStorage.getItem('poopRecords');
+            if (savedRecords) {
+                records = JSON.parse(savedRecords);
+            }
+        }
+
+        // 保存数据到 localStorage
+        function saveRecord(user, date, status) {
+            if (!records[user]) {
+                records[user] = {};
+            }
+            records[user][date] = status;
+            localStorage.setItem('poopRecords', JSON.stringify(records));
+            renderContent();
+        }
+
+        // 获取某用户某天的记录
+        function getRecord(user, date) {
+            return records[user]?.[date] || null;
+        }
+
+        // 获取统计数据
+        function getStats(user) {
+            if (!records[user]) return { total: 0, yes: 0, no: 0, rate: 0 };
+            
+            const dates = Object.keys(records[user]);
+            const total = dates.length;
+            const yes = dates.filter(date => records[user][date] === true).length;
+            const no = dates.filter(date => records[user][date] === false).length;
+            const rate = total > 0 ? Math.round((yes / total) * 100) : 0;
+            
+            return { total, yes, no, rate };
+        }
+
+        // 渲染内容区域
+        function renderContent() {
+            const contentArea = document.getElementById('content-area');
+            
+            if (!currentUser) {
+                contentArea.innerHTML = `
+                    <div class="welcome-message">
+                        <p>👆 请选择用户开始记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const stats = getStats(currentUser);
+            const currentRecord = getRecord(currentUser, selectedDate);
+            
+            let statusHtml = '';
+            if (currentRecord === true) {
+                statusHtml = '<p class="status-text success">🎉 ' + selectedDate + ' 已记录：拉了</p>';
+            } else if (currentRecord === false) {
+                statusHtml = '<p class="status-text warning">⚠️ ' + selectedDate + ' 已记录：没拉</p>';
+            } else {
+                statusHtml = '<p class="status-text info">📝 ' + selectedDate + ' 还未记录</p>';
+            }
+
+            // 生成最近记录列表
+            const userRecords = records[currentUser] || {};
+            const sortedDates = Object.keys(userRecords).sort((a, b) => new Date(b) - new Date(a)).slice(0, 7);
+            
+            let recordsHtml = '';
+            if (sortedDates.length === 0) {
+                recordsHtml = '<p class="no-records">暂无记录，开始记录吧！</p>';
+            } else {
+                recordsHtml = sortedDates.map(date => {
+                    const status = userRecords[date];
+                    const statusClass = status ? 'success' : 'warning';
+                    const statusText = status ? '✅ 拉了' : '❌ 没拉';
+                    return `
+                        <div class="record-item">
+                            <span class="record-date">${date}</span>
+                            <span class="record-status ${statusClass}">${statusText}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            contentArea.innerHTML = `
+                <div class="record-section">
+                    <h2>记录今日状态</h2>
+                    <div class="date-picker">
+                        <label>选择日期：</label>
+                        <input type="date" id="date-input" value="${selectedDate}">
+                    </div>
+
+                    <div class="status-buttons">
+                        <button class="status-btn yes ${currentRecord === true ? 'active' : ''}" onclick="handleStatus(true)">
+                            ✅ 拉了
+                        </button>
+                        <button class="status-btn no ${currentRecord === false ? 'active' : ''}" onclick="handleStatus(false)">
+                            ❌ 没拉
+                        </button>
+                    </div>
+
+                    <div class="current-status">
+                        ${statusHtml}
+                    </div>
+                </div>
+
+                <div class="stats-section">
+                    <h2>📊 统计数据</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.total}</div>
+                            <div class="stat-label">总记录天数</div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-value">${stats.yes}</div>
+                            <div class="stat-label">拉了天数</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-value">${stats.no}</div>
+                            <div class="stat-label">没拉天数</div>
+                        </div>
+                        <div class="stat-card info">
+                            <div class="stat-value">${stats.rate}%</div>
+                            <div class="stat-label">排便率</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-records">
+                    <h2>📅 最近记录</h2>
+                    <div class="records-list">
+                        ${recordsHtml}
+                    </div>
+                </div>
+            `;
+
+            // 添加日期选择器事件监听
+            document.getElementById('date-input').addEventListener('change', function(e) {
+                selectedDate = e.target.value;
+                renderContent();
+            });
+        }
+
+        // 处理状态按钮点击
+        function handleStatus(status) {
+            saveRecord(currentUser, selectedDate, status);
+        }
+
+        // 初始化
+        loadRecords();
+
+        // 用户选择按钮事件
+        document.querySelectorAll('.user-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentUser = this.dataset.user;
+                renderContent();
+            });
+        });
+    </script>
+</body>
+</html>
