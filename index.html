@@ -96,7 +96,8 @@
 
         .record-section,
         .stats-section,
-        .recent-records {
+        .recent-records,
+        .calendar-section {
             background: white;
             border-radius: 16px;
             padding: 2rem;
@@ -106,7 +107,8 @@
 
         .record-section h2,
         .stats-section h2,
-        .recent-records h2 {
+        .recent-records h2,
+        .calendar-section h2 {
             color: #333;
             margin-bottom: 1.5rem;
             text-align: center;
@@ -328,6 +330,163 @@
             font-size: 1rem;
         }
 
+        /* 日历样式 */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .calendar-nav button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .calendar-nav button:hover {
+            background: #5a6fd6;
+        }
+
+        .calendar-month {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 1rem;
+        }
+
+        .calendar-header {
+            text-align: center;
+            padding: 0.75rem 0.5rem;
+            font-weight: bold;
+            color: #666;
+            font-size: 0.9rem;
+            background: #f0f0f0;
+            border-radius: 6px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 60px;
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .calendar-day.empty {
+            background: transparent;
+            cursor: default;
+        }
+
+        .calendar-day.empty:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .calendar-day-number {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .calendar-day-status {
+            display: flex;
+            gap: 2px;
+            font-size: 0.7rem;
+        }
+
+        .calendar-day-status .user-status {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .calendar-day-status .user-status.yes {
+            background: #4caf50;
+            color: white;
+        }
+
+        .calendar-day-status .user-status.no {
+            background: #ff9800;
+            color: white;
+        }
+
+        .calendar-day-status .user-status.empty {
+            background: #e0e0e0;
+            color: #999;
+        }
+
+        .calendar-day.today {
+            border: 2px solid #667eea;
+        }
+
+        .calendar-day.today .calendar-day-number {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .calendar-legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.yes {
+            background: #4caf50;
+        }
+
+        .legend-dot.no {
+            background: #ff9800;
+        }
+
+        .legend-dot.empty {
+            background: #e0e0e0;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.8rem;
@@ -352,6 +511,30 @@
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .calendar-grid {
+                gap: 2px;
+            }
+
+            .calendar-day {
+                min-height: 45px;
+                padding: 2px;
+            }
+
+            .calendar-day-number {
+                font-size: 0.75rem;
+            }
+
+            .calendar-day-status .user-status {
+                width: 14px;
+                height: 14px;
+                font-size: 8px;
+            }
+
+            .calendar-header {
+                padding: 0.5rem 0.25rem;
+                font-size: 0.75rem;
+            }
         }
     </style>
 </head>
@@ -359,7 +542,7 @@
     <div class="app">
         <header class="header">
             <h1>💩 情侣排便统计 💩</h1>
-            <p class="subtitle">记录每一天的健康习惯</p>
+            <p class="subtitle">记录每一天的健康习惯 - 蒋老大 & 小邓邓</p>
         </header>
 
         <div class="container">
@@ -387,6 +570,9 @@
         let currentUser = '';
         let selectedDate = new Date().toISOString().split('T')[0];
         let records = {};
+        let currentCalendarDate = new Date();
+
+        const users = ['蒋老大', '小邓邓'];
 
         // 从 localStorage 加载数据
         function loadRecords() {
@@ -422,6 +608,122 @@
             const rate = total > 0 ? Math.round((yes / total) * 100) : 0;
             
             return { total, yes, no, rate };
+        }
+
+        // 生成日历 HTML
+        function generateCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay();
+            
+            const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
+                               '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            
+            let html = `
+                <div class="calendar-nav">
+                    <button onclick="changeMonth(-1)">◀ 上月</button>
+                    <span class="calendar-month">${year}年 ${monthNames[month]}</span>
+                    <button onclick="changeMonth(1)">下月 ▶</button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-header">日</div>
+                    <div class="calendar-header">一</div>
+                    <div class="calendar-header">二</div>
+                    <div class="calendar-header">三</div>
+                    <div class="calendar-header">四</div>
+                    <div class="calendar-header">五</div>
+                    <div class="calendar-header">六</div>
+            `;
+            
+            // 空白日期
+            for (let i = 0; i < startingDay; i++) {
+                html += '<div class="calendar-day empty"></div>';
+            }
+            
+            // 日期
+            const today = new Date().toISOString().split('T')[0];
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isToday = dateStr === today;
+                
+                // 获取两位用户的记录
+                const jiangStatus = getRecord('蒋老大', dateStr);
+                const dengStatus = getRecord('小邓邓', dateStr);
+                
+                let jiangClass = 'empty';
+                let jiangIcon = '?';
+                if (jiangStatus === true) {
+                    jiangClass = 'yes';
+                    jiangIcon = '✓';
+                } else if (jiangStatus === false) {
+                    jiangClass = 'no';
+                    jiangIcon = '✗';
+                }
+                
+                let dengClass = 'empty';
+                let dengIcon = '?';
+                if (dengStatus === true) {
+                    dengClass = 'yes';
+                    dengIcon = '✓';
+                } else if (dengStatus === false) {
+                    dengClass = 'no';
+                    dengIcon = '✗';
+                }
+                
+                html += `
+                    <div class="calendar-day ${isToday ? 'today' : ''}" onclick="selectDate('${dateStr}')">
+                        <span class="calendar-day-number">${day}</span>
+                        <div class="calendar-day-status">
+                            <span class="user-status ${jiangClass}" title="蒋老大">${jiangIcon}</span>
+                            <span class="user-status ${dengClass}" title="小邓邓">${dengIcon}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            
+            // 图例
+            html += `
+                <div class="calendar-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot yes"></span>
+                        <span>拉了</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot no"></span>
+                        <span>没拉</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot empty"></span>
+                        <span>未记录</span>
+                    </div>
+                    <div class="legend-item">
+                        <span style="font-size: 0.8rem;">👨 蒋老大 👩 小邓邓</span>
+                    </div>
+                </div>
+            `;
+            
+            return html;
+        }
+
+        // 切换月份
+        function changeMonth(delta) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            renderContent();
+        }
+
+        // 选择日期
+        function selectDate(date) {
+            selectedDate = date;
+            renderContent();
+            // 滚动到记录区域
+            document.querySelector('.record-section').scrollIntoView({ behavior: 'smooth' });
         }
 
         // 渲染内容区域
@@ -492,6 +794,11 @@
                     </div>
                 </div>
 
+                <div class="calendar-section">
+                    <h2>📅 日历统计表</h2>
+                    ${generateCalendar()}
+                </div>
+
                 <div class="stats-section">
                     <h2>📊 统计数据</h2>
                     <div class="stats-grid">
@@ -515,7 +822,7 @@
                 </div>
 
                 <div class="recent-records">
-                    <h2>📅 最近记录</h2>
+                    <h2>📋 最近记录</h2>
                     <div class="records-list">
                         ${recordsHtml}
                     </div>
