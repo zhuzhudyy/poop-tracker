@@ -594,7 +594,10 @@
 
         // 获取某用户某天的记录
         function getRecord(user, date) {
-            return records[user]?.[date] || null;
+            if (records[user] && records[user][date] !== undefined) {
+                return records[user][date];
+            }
+            return null;
         }
 
         // 获取统计数据
